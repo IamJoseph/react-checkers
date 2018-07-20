@@ -5,11 +5,23 @@ import { Results } from "./Results";
 import { ResetButton } from "./Buttons/ResetButton";
 import update from "immutability-helper";
 
-const board = [...Array(8)].map((cur, index) => {
-  return Array.from({ length: 8 }, (c, i) => {
-    return { position: `${index}${i}`, selected: false, isKing: false };
+const board = [...Array(8)].map((cur, rowIndex) => {
+  return Array.from({ length: 8 }, (c, columnIndex) => {
+    let pieces;
+    if (rowIndex < 3) {
+      pieces = (rowIndex + columnIndex) % 2 !== 0 && "playerOne";
+    } else if (rowIndex > 4) {
+      pieces = (rowIndex + columnIndex) % 2 !== 0 && "playerTwo";
+    }
+    return {
+      pieces,
+      position: `${rowIndex}${columnIndex}`,
+      selected: false,
+      isKing: false
+    };
   });
 });
+
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -24,21 +36,12 @@ export default class App extends Component {
   setupBoard = () => {
     return this.state.rows.map((curRow, rowIndex) => {
       return curRow.map((curTile, columnIndex) => {
-        let pieces;
-
-        if (rowIndex < 3) {
-          pieces = (rowIndex + columnIndex) % 2 !== 0 && "playerOne";
-        } else if (rowIndex > 4) {
-          pieces = (rowIndex + columnIndex) % 2 !== 0 && "playerTwo";
-        }
-        //  function getPieces()
-
         return (
           <Tiles
             row={rowIndex}
             column={columnIndex}
             key={columnIndex}
-            pieces={pieces}
+            // pieces={pieces}
             values={curTile}
             updateBoard={this.updateBoard}
             player={this.state.player}
@@ -49,27 +52,58 @@ export default class App extends Component {
   };
 
   updateBoard = (piece, position) => {
+    const row = position[0];
+    const column = position[1];
+    const { selectedPiece } = this.state;
     // check if current players turn and checker is present
     // make selection
     // check if next selection is valid
-    console.log("piece", piece, "position", position[0]);
-    // if (piece) {
-    console.log("pos", this.state.rows[position[0]][position[1]].selected);
-    const row = position[0];
-    const column = position[1];
-    console.log("row", row, "column", column);
+    console.log(
+      "piece",
+      !piece,
+      "position",
+      position,
+      "selectedPiece",
+      selectedPiece
+    );
 
-    this.setState({
-      rows: update(this.state.rows, {
-        [row]: {
-          [column]: {
-            selected: { $set: true }
+    if (
+      selectedPiece &&
+      (+position === selectedPiece - 11 || +position === selectedPiece - 9)
+    ) {
+      console.log("herro");
+
+      this.setState({
+        rows: update(this.state.rows, {
+          [row]: {
+            [column]: {
+              pieces: { $set: "playerTwo" }
+              //    selected: { $set: true }
+            }
+          },
+          [selectedPiece[0]]: {
+            [selectedPiece[1]]: {
+              pieces: { $set: null },
+              selected: { $set: false }
+            }
           }
-        }
-        // [row]: row => update(row, { 1: { selected: true } })
-      }),
-      selectedPiece: position
-    });
+        }),
+        selectedPiece: ""
+      });
+    }
+
+    if (piece && !selectedPiece) {
+      this.setState({
+        rows: update(this.state.rows, {
+          [row]: {
+            [column]: {
+              selected: { $set: true }
+            }
+          }
+        }),
+        selectedPiece: position
+      });
+    }
     //}
     //const { gameBoard } = this.state;
 

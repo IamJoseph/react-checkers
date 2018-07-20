@@ -3,12 +3,11 @@ import "./Tiles.css";
 
 export const Tiles = props => {
   const {
-    pieces,
     location,
     row,
     column,
     player,
-    values: { position, selected },
+    values: { pieces, position, selected },
     updateBoard
   } = props;
   //const color = row % 2 + 1;
