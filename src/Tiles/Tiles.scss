@@ -1,0 +1,63 @@
+  .red{
+    background: #ff5068;
+  }
+  .black{
+    background: #48363e;
+  }
+  
+  .tile {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    /* flex: 1 1 33%; */
+    flex: 1 1 12.5%;
+    height: 1em;
+    /* background: #fcfdfd; */
+    border: 2px solid #291913;
+    animation: grid linear 500ms 3;
+    background:#ff8dac;
+    &:nth-child(16n-14),
+    &:nth-child(16n-12),
+    &:nth-child(16n-10),
+    &:nth-child(16n-8),
+    &:nth-child(16n-1),
+    &:nth-child(16n-3),
+    &:nth-child(16n-5),
+    &:nth-child(16n-7){
+      background: #ffe4bb
+    }
+    &.selected{
+      background: #85cbe0;
+      border: 2px solid #10323d;
+    }
+  div {
+    border-radius: 100%;
+    height: 80%;
+    pointer-events: none;
+    width: 80%;
+    &.playerOne{
+        background: black;
+    }
+    &.playerTwo{
+        background: red;
+    }
+  }
+  }
+  
+  .checkerPiece{
+    background: black;
+      border-radius: 100%;
+      width: 80%;
+      height: 80%;
+  
+  }
+  @keyframes grid {
+    0%{
+        transform: rotate3d(0,40,0,180deg);
+    }
+    100%{
+      transform: rotate3d(0,40,0,360deg);
+    }
+  }
+  
