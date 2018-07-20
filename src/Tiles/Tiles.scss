@@ -16,7 +16,7 @@
     /* background: #fcfdfd; */
     border: 2px solid #291913;
     animation: grid linear 500ms 3;
-    background:#ff8dac;
+    background: #ffe4bb;
     &:nth-child(16n-14),
     &:nth-child(16n-12),
     &:nth-child(16n-10),
@@ -25,7 +25,8 @@
     &:nth-child(16n-3),
     &:nth-child(16n-5),
     &:nth-child(16n-7){
-      background: #ffe4bb
+      background:#ff8dac;
+      
     }
     &.selected{
       background: #85cbe0;
@@ -40,7 +41,7 @@
         background: black;
     }
     &.playerTwo{
-        background: red;
+        background: #fafaf4;
     }
   }
   }
