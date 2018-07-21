@@ -89,6 +89,7 @@ export default class App extends Component {
       const nextColumn = binaryOp === "add"
         ? column + columnNum
         : column - columnNum;
+      // needs to check if the next column/row is <0 or >7
       return board[nextRow][nextColumn].pieces;
     }
 
@@ -107,13 +108,19 @@ export default class App extends Component {
 
         const isEnemy =
           board[jumpedTile[0]][jumpedTile[1]].pieces === otherPlayer;
-
         if (isEnemy) {
+          const isKing = (playerTurn === "playerOne" &&
+            +selectedPiece[0] === 6) ||
+            (playerTurn === "playerTwo" && +selectedPiece[0] === 1)
+            ? true
+            : false;
+
           this.setState({
             board: update(this.state.board, {
               [row]: {
                 [column]: {
-                  pieces: { $set: playerTurn }
+                  pieces: { $set: playerTurn },
+                  isKing: { $set: isKing }
                 }
               },
               [jumpedTile[0]]: {
@@ -140,12 +147,25 @@ export default class App extends Component {
       const movedLeft = +position === getMoveLocation("singleMoveL");
       const movedRight = +position === getMoveLocation("singleMoveR");
       if (!movedLeft && !movedRight) return;
+      const isKing = (playerTurn === "playerOne" && +selectedPiece[0] === 6) ||
+        (playerTurn === "playerTwo" && +selectedPiece[0] === 1)
+        ? true
+        : false;
+      console.log(
+        "playerTurn",
+        playerTurn,
+        "selectedpiece",
+        selectedPiece[0],
+        "iseq",
+        +selectedPiece[0] === 1
+      );
 
       this.setState({
         board: update(this.state.board, {
           [row]: {
             [column]: {
-              pieces: { $set: playerTurn }
+              pieces: { $set: playerTurn },
+              isKing: { $set: isKing }
             }
           },
           [selectedPiece[0]]: {
@@ -168,7 +188,9 @@ export default class App extends Component {
         let isChecker = checkerCheck(1, 1, "add");
         if (isChecker) {
           //this means the next piece is an enemy
-          if (column < 6 && isChecker !== playerTurn) {
+          if (column < 5 && row > 1 && isChecker !== playerTurn) {
+            console.log("row", row, "column", column);
+
             possibilityOne = checkerCheck(2, 2, "add") ? false : true;
             console.log(" is next tile avail checkerCheck2", isChecker);
           } else {
@@ -186,6 +208,7 @@ export default class App extends Component {
         if (isChecker) {
           //this means the next piece is an enemy
           if (column > 1 && isChecker !== playerTurn) {
+            console.log("row", row, "column", column);
             possibilityTwo = checkerCheck(2, 2, "sub") ? false : true;
             console.log(" is next tile avail checkerCheck2", isChecker);
           } else {
