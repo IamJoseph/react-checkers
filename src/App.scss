@@ -1,0 +1,59 @@
+u {
+  text-decoration: none;
+}
+u:nth-child(1) {
+  color: #03a9f4;
+}
+
+u:nth-child(2) {
+  color: #ff8dac;
+}
+
+.container {
+  padding: 0 1em;
+  text-align: center;
+  perspective: 100px;
+}
+
+.boardContainer {
+  background-image: url(https://i.imgur.com/vI7rtm2.jpg);
+  background-size: auto 7.5em;
+  background-position: center top;
+  background-repeat: no-repeat;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 7.5em;
+  flex-wrap: wrap;
+  font-size: 4em;
+  transform: rotateX(2deg);
+}
+
+.checker{
+  font-weight: 500;
+    color: white;
+  background: #ff8dac;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 30em;
+    padding: .5em 0;
+  .playerOne, .playerTwo{
+      background: #151515;
+      border-radius: 100%;
+  height: 1em;
+  pointer-events: none;
+  width: 1em;
+  margin-left: 1em;
+  }
+  .playerTwo{
+      background: #fafaf4;
+  }
+  .score{
+    margin-left: 2em;
+  }
+}

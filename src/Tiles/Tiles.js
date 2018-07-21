@@ -7,21 +7,9 @@ export const Tiles = props => {
     row,
     column,
     player,
-    values: { pieces, position, selected },
+    values: { pieces, position, selected, isKing },
     updateBoard
   } = props;
-  //const color = row % 2 + 1;
-  //const color = (row + column) % 2 === 0 ? "red" : "black";
-  // console.log(
-  //   "loc",
-  //   location,
-  //   "value",
-  //   value,
-  //   "color",
-  //   color,
-  //   "r+c",
-  //   row + column
-  // );
 
   return (
     <div
@@ -29,7 +17,7 @@ export const Tiles = props => {
       className={`tile ${selected ? "selected" : ""}`}
       onClick={() => updateBoard(pieces, position)}
     >
-      {pieces && <div className={pieces} />}
+      {pieces && <div className={`${pieces} ${isKing && "king"}`} />}
       {/* <p>{value}</p> */}
     </div>
   );
