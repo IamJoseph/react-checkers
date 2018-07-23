@@ -55,29 +55,40 @@ export default class App extends Component {
     const row = +position[0];
     const column = +position[1];
     function getMoveLocation(type) {
+      const modNum = selectedPiece ? +selectedPiece : +position;
+      console.log("pos", position, modNum);
+
       if (playerTurn === "playerOne") {
         switch (type) {
           case "singleMoveR":
-            return +selectedPiece + 11;
+            return modNum + 11;
           case "singleMoveL":
-            return +selectedPiece + 9;
+            return modNum + 9;
           case "jumpMoveR":
-            return +selectedPiece + 22;
+            return modNum + 22;
           case "jumpMoveL":
-            return +selectedPiece + 18;
+            return modNum + 18;
           default:
             break;
         }
       }
       switch (type) {
         case "singleMoveR":
-          return +selectedPiece - 11;
+          return modNum - 9;
         case "singleMoveL":
-          return +selectedPiece - 9;
+          return modNum - 11;
         case "jumpMoveR":
-          return +selectedPiece - 22;
+          return modNum - 18;
         case "jumpMoveL":
-          return +selectedPiece - 18;
+          return modNum - 22;
+        // case "singleMoveR":
+        //   return modNum - 11;
+        // case "singleMoveL":
+        //   return modNum - 9;
+        // case "jumpMoveR":
+        //   return modNum - 22;
+        // case "jumpMoveL":
+        //   return modNum - 18;
         default:
           break;
       }
@@ -85,10 +96,29 @@ export default class App extends Component {
     const otherPlayer = playerTurn === "playerOne" ? "playerTwo" : "playerOne";
     // TODO replace with getMoveLocation function
     function checkerCheck(rowNum, columnNum, binaryOp) {
+      // if (
+      //   (binaryOp === "add" && column >= 7) ||
+      //   (binaryOp === "sub" && column <= 0)
+      // ) {
+      //   console.log("is this true");
+
+      //   return true;
+      // }
       const nextRow = playerTurn === "playerOne" ? row + rowNum : row - rowNum;
       const nextColumn = binaryOp === "add"
         ? column + columnNum
         : column - columnNum;
+      console.log(
+        "nextR",
+        nextRow,
+        "column",
+        column,
+        "columnNum",
+        columnNum,
+        "nextColumn",
+        nextColumn
+      );
+
       // needs to check if the next column/row is <0 or >7
       return board[nextRow][nextColumn].pieces;
     }
@@ -96,7 +126,11 @@ export default class App extends Component {
     // if there is a checker already selected
     if (selectedPiece) {
       // if next selection is taken by enemy return
-      if (board[row][column].pieces === otherPlayer) return;
+      if (
+        board[row][column].pieces === otherPlayer ||
+        board[row][column].pieces === playerTurn
+      )
+        return;
 
       //checks for jump moves
       const jumpedLeft = +position === getMoveLocation("jumpMoveL");
@@ -181,46 +215,77 @@ export default class App extends Component {
       });
     }
     // makes a selection if selected checker is owned by the player and a piece has yet to be selected
+    // TODO separate into new function
     if (piece === playerTurn && !selectedPiece) {
       let possibilityOne = false;
       let possibilityTwo = false;
+      let sL = getMoveLocation("singleMoveL").toString();
+      let sR = getMoveLocation("singleMoveR").toString();
+      function isLegal(pos) {
+        console.log("pos", pos);
 
-      if (column < 7) {
-        let isChecker = checkerCheck(1, 1, "add");
+        if (pos[0] < 0 || pos[0] > 7 || pos[1] < 0 || pos[1] > 7) return false;
+        return true;
+      }
+      //position is what we are trying to select
+      //if (sL[0] < 0 || sL[0] > 7 || sL[1] < 0 || sL[1] > 7) insideBoardLeft = false;
+      //if (sR[0] < 0 || sR[0] > 7 || sR[1] < 0 || sR[1] > 7) insideBoardRight = false;
+      //console.log("sL", sL, sR);
+      if (isLegal(sL)) {
+        console.log("sL", sL);
+
+        let isChecker = checkerCheck(1, 1, "sub");
         if (isChecker) {
-          //this means the next piece is an enemy
-          if (column < 5 && row > 1 && isChecker !== playerTurn) {
-            console.log("row", row, "column", column);
-
-            possibilityOne = checkerCheck(2, 2, "add") ? false : true;
-            console.log(" is next tile avail checkerCheck2", isChecker);
-          } else {
-            //the diagonal checker is yours
-            possibilityOne = false;
+          const dL = getMoveLocation("jumpMoveL").toString();
+          if (isLegal(dL) && isChecker !== playerTurn) {
+            possibilityOne = checkerCheck(2, 2, "sub") ? false : true;
           }
         } else {
-          //the space is free
           possibilityOne = true;
         }
       }
-      if (column > 0) {
-        let isChecker = checkerCheck(1, 1, "sub");
-        possibilityTwo = isChecker ? false : true;
+      if (isLegal(sR)) {
+        console.log("sr", sR);
+
+        let isChecker = checkerCheck(1, 1, "add");
         if (isChecker) {
-          //this means the next piece is an enemy
-          if (column > 1 && row > 1 && isChecker !== playerTurn) {
-            console.log("row", row, "column", column);
-            possibilityTwo = checkerCheck(2, 2, "sub") ? false : true;
-            console.log(" is next tile avail checkerCheck2", isChecker);
-          } else {
-            //the diagonal checker is yours
-            possibilityTwo = false;
+          const dR = getMoveLocation("jumpMoveR").toString();
+          if (isLegal(dR) && isChecker !== playerTurn) {
+            possibilityTwo = checkerCheck(2, 2, "add") ? false : true;
           }
         } else {
-          //the space is free
           possibilityTwo = true;
         }
       }
+
+      // let isChecker = checkerCheck(1, 1, "add");
+      // console.log("1", isChecker);
+      // if (isChecker) {
+      //   //this means the next piece is an enemy
+      //   if (column <= 5 && row > 1 && isChecker !== playerTurn) {
+      //     possibilityOne = checkerCheck(2, 2, "add") ? false : true;
+      //   } else {
+      //     //the diagonal checker is yours
+      //     possibilityOne = false;
+      //   }
+      // } else {
+      //   possibilityOne = true;
+      // }
+      // let isChecker = checkerCheck(1, 1, "sub");
+      // console.log("2", isChecker);
+      // if (isChecker) {
+      //   //this means the next piece is an enemy
+      //   // row > 1 only necessary for player1
+      //   if (column > 1 && row > 1 && isChecker !== playerTurn) {
+      //     possibilityTwo = checkerCheck(2, 2, "sub") ? false : true;
+      //   } else {
+      //     //the diagonal checker is yours
+      //     possibilityTwo = false;
+      //   }
+      // } else {
+      //   possibilityTwo = true;
+      // }
+      // console.log("pos1", possibilityOne, "pos2", possibilityTwo);
 
       // if both possible spots are occupied by the players checker, that checker cannot be selected
       if (!possibilityOne && !possibilityTwo) return;
