@@ -15,7 +15,7 @@ export const Tiles = props => {
     <div
       //className="tile"
       className={`tile ${selected ? "selected" : ""}`}
-      onClick={() => updateBoard(pieces, position)}
+      onClick={() => updateBoard(pieces, position, isKing)}
     >
       {pieces && <div className={`${pieces} ${isKing && "king"}`} />}
       {/* <p>{value}</p> */}

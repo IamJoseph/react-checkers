@@ -50,15 +50,41 @@ export default class App extends Component {
     });
   };
 
-  updateBoard = (piece, position) => {
+  updateBoard = (piece, position, isKing) => {
     const { board, selectedPiece, playerTurn } = this.state;
     const row = +position[0];
     const column = +position[1];
+    console.log("huh?", isKing);
+
     function getMoveLocation(type) {
       const modNum = selectedPiece ? +selectedPiece : +position;
-      console.log("pos", position, modNum);
-
-      if (playerTurn === "playerOne") {
+      // console.log("king?", isKing);
+      console.log("asdlfkjasdfklj", isKing);
+      const checkForKing = selectedPiece
+        ? board[selectedPiece[0]][selectedPiece[1]].isKing
+        : isKing;
+      if (checkForKing) {
+        switch (type) {
+          case "singleMoveDownR":
+            return (modNum + 11).toString();
+          case "singleMoveDownL":
+            return (modNum + 9).toString();
+          case "jumpMoveDownR":
+            return (modNum + 22).toString();
+          case "jumpMoveDownL":
+            return (modNum + 18).toString();
+          case "singleMoveUpR":
+            return (modNum - 9).toString();
+          case "singleMoveUpL":
+            return (modNum - 11).toString();
+          case "jumpMoveUpR":
+            return (modNum - 18).toString();
+          case "jumpMoveUpL":
+            return (modNum - 22).toString();
+          default:
+            break;
+        }
+      } else if (playerTurn === "playerOne") {
         switch (type) {
           case "singleMoveR":
             return modNum + 11;
@@ -81,14 +107,6 @@ export default class App extends Component {
           return modNum - 18;
         case "jumpMoveL":
           return modNum - 22;
-        // case "singleMoveR":
-        //   return modNum - 11;
-        // case "singleMoveL":
-        //   return modNum - 9;
-        // case "jumpMoveR":
-        //   return modNum - 22;
-        // case "jumpMoveL":
-        //   return modNum - 18;
         default:
           break;
       }
@@ -96,28 +114,20 @@ export default class App extends Component {
     const otherPlayer = playerTurn === "playerOne" ? "playerTwo" : "playerOne";
     // TODO replace with getMoveLocation function
     function checkerCheck(rowNum, columnNum, binaryOp) {
-      // if (
-      //   (binaryOp === "add" && column >= 7) ||
-      //   (binaryOp === "sub" && column <= 0)
-      // ) {
-      //   console.log("is this true");
-
-      //   return true;
-      // }
       const nextRow = playerTurn === "playerOne" ? row + rowNum : row - rowNum;
       const nextColumn = binaryOp === "add"
         ? column + columnNum
         : column - columnNum;
-      console.log(
-        "nextR",
-        nextRow,
-        "column",
-        column,
-        "columnNum",
-        columnNum,
-        "nextColumn",
-        nextColumn
-      );
+      // console.log(
+      //   "nextR",
+      //   nextRow,
+      //   "column",
+      //   column,
+      //   "columnNum",
+      //   columnNum,
+      //   "nextColumn",
+      //   nextColumn
+      // );
 
       // needs to check if the next column/row is <0 or >7
       return board[nextRow][nextColumn].pieces;
@@ -148,7 +158,6 @@ export default class App extends Component {
             (playerTurn === "playerTwo" && +selectedPiece[0] === 2)
             ? true
             : false;
-          console.log("we jumped", playerTurn, selectedPiece[0]);
 
           this.setState({
             board: update(this.state.board, {
@@ -179,21 +188,34 @@ export default class App extends Component {
       }
 
       //checks for single moves
-      const movedLeft = +position === getMoveLocation("singleMoveL");
-      const movedRight = +position === getMoveLocation("singleMoveR");
-      if (!movedLeft && !movedRight) return;
-      const isKing = (playerTurn === "playerOne" && +selectedPiece[0] === 6) ||
+      console.log("isKing", isKing, selectedPiece[0], selectedPiece[1]);
+
+      if (board[selectedPiece[0]][selectedPiece[1]].isKing) {
+        const movedUpLeft = position === getMoveLocation("singleMoveUpL");
+        const movedUpRight = position === getMoveLocation("singleMoveUpR");
+        const movedDownLeft = position === getMoveLocation("singleMoveDownL");
+        const movedDownRight = position === getMoveLocation("singleMoveDownR");
+        //console.log("movedL", movedLeft, "movedRight", movedRight);
+        console.log(
+          "is kinggg",
+          position,
+          movedDownRight,
+          getMoveLocation("singleMoveDownR")
+        );
+
+        if (!movedUpLeft && !movedUpRight && !movedDownLeft && !movedDownRight)
+          return;
+      } else {
+        const movedLeft = +position === getMoveLocation("singleMoveL");
+        const movedRight = +position === getMoveLocation("singleMoveR");
+        if (!movedLeft && !movedRight) return;
+      }
+      const isKing = board[selectedPiece[0]][selectedPiece[1]].isKing ||
+        (playerTurn === "playerOne" && +selectedPiece[0] === 6) ||
         (playerTurn === "playerTwo" && +selectedPiece[0] === 1)
         ? true
         : false;
-      console.log(
-        "playerTurn",
-        playerTurn,
-        "selectedpiece",
-        selectedPiece[0],
-        "iseq",
-        +selectedPiece[0] === 1
-      );
+      console.log("we got here");
 
       this.setState({
         board: update(this.state.board, {
@@ -219,76 +241,122 @@ export default class App extends Component {
     if (piece === playerTurn && !selectedPiece) {
       let possibilityOne = false;
       let possibilityTwo = false;
+      let possibilityThree = false;
+      let possibilityFour = false;
       let sL = getMoveLocation("singleMoveL").toString();
       let sR = getMoveLocation("singleMoveR").toString();
+      //   let onceMore = getMoveLocation("singleMoveL").toString();
       function isLegal(pos) {
-        console.log("pos", pos);
-
-        if (pos[0] < 0 || pos[0] > 7 || pos[1] < 0 || pos[1] > 7) return false;
+        if (
+          //checking out of bounds and negative numbers
+          pos.length > 2 ||
+          pos < 0 ||
+          pos[0] < 0 ||
+          pos[0] > 7 ||
+          pos[1] < 0 ||
+          pos[1] > 7
+        )
+          return false;
         return true;
       }
-      //position is what we are trying to select
-      //if (sL[0] < 0 || sL[0] > 7 || sL[1] < 0 || sL[1] > 7) insideBoardLeft = false;
-      //if (sR[0] < 0 || sR[0] > 7 || sR[1] < 0 || sR[1] > 7) insideBoardRight = false;
-      //console.log("sL", sL, sR);
-      if (isLegal(sL)) {
-        console.log("sL", sL);
+      if (isKing) {
+        let sUL = getMoveLocation("singleMoveUpL");
+        let sUR = getMoveLocation("singleMoveUpR");
+        let sDL = getMoveLocation("singleMoveDownL");
+        let sDR = getMoveLocation("singleMoveDownR");
+        if (isLegal(sUL)) {
+          console.log("sUL", sUL);
+          if (sUL.length === 1) sUL = "0" + sUL;
+          let isChecker = board[sUL[0]][sUL[1]].pieces;
+          if (isChecker) {
+            let dUL = getMoveLocation("jumpMoveUpL");
+            if (isLegal(dUL) && isChecker !== playerTurn) {
+              if (dUL.length === 1) dUL = "0" + dUL;
+              console.log("dUL", dUL);
 
-        let isChecker = checkerCheck(1, 1, "sub");
-        if (isChecker) {
-          const dL = getMoveLocation("jumpMoveL").toString();
-          if (isLegal(dL) && isChecker !== playerTurn) {
-            possibilityOne = checkerCheck(2, 2, "sub") ? false : true;
+              possibilityOne = board[dUL[0]][dUL[1]].pieces ? false : true;
+            }
+          } else {
+            possibilityOne = true;
           }
-        } else {
-          possibilityOne = true;
+        }
+        if (isLegal(sUR)) {
+          console.log("sUR", sUR);
+          if (sUR.length === 1) sUR = "0" + sUL;
+          let isChecker = board[sUR[0]][sUR[1]].pieces;
+          if (isChecker) {
+            let dUR = getMoveLocation("jumpMoveUpR");
+            if (isLegal(dUR) && isChecker !== playerTurn) {
+              if (dUR.length === 1) dUR = "0" + dUR; //can't do this
+              console.log("durrrrr", dUR);
+
+              possibilityTwo = board[dUR[0]][dUR[1]].pieces ? false : true;
+            }
+          } else {
+            possibilityTwo = true;
+          }
+        }
+        if (isLegal(sDL)) {
+          console.log("sDL", sDL);
+          let isChecker = board[sDL[0]][sDL[1]].pieces;
+          if (isChecker) {
+            const dDL = getMoveLocation("jumpMoveDownL");
+            if (isLegal(dDL) && isChecker !== playerTurn) {
+              possibilityThree = board[dDL[0]][dDL[1]].pieces ? false : true;
+            }
+          } else {
+            possibilityThree = true;
+          }
+        }
+        if (isLegal(sDR)) {
+          console.log("sDR", sDR);
+          let isChecker = board[sDR[0]][sDR[1]].pieces;
+          if (isChecker) {
+            const dDR = getMoveLocation("jumpMoveDownR").toString();
+            if (isLegal(dDR) && isChecker !== playerTurn) {
+              possibilityFour = board[dDR[0]][dDR[1]].pieces ? false : true;
+            }
+          } else {
+            possibilityFour = true;
+          }
+        }
+      } else {
+        if (isLegal(sL)) {
+          console.log("sL", sL);
+
+          let isChecker = checkerCheck(1, 1, "sub");
+          if (isChecker) {
+            const dL = getMoveLocation("jumpMoveL").toString();
+            if (isLegal(dL) && isChecker !== playerTurn) {
+              possibilityOne = checkerCheck(2, 2, "sub") ? false : true;
+            }
+          } else {
+            possibilityOne = true;
+          }
+        }
+        if (isLegal(sR)) {
+          console.log("sr", sR);
+
+          let isChecker = checkerCheck(1, 1, "add");
+          if (isChecker) {
+            const dR = getMoveLocation("jumpMoveR").toString();
+            if (isLegal(dR) && isChecker !== playerTurn) {
+              possibilityTwo = checkerCheck(2, 2, "add") ? false : true;
+            }
+          } else {
+            possibilityTwo = true;
+          }
         }
       }
-      if (isLegal(sR)) {
-        console.log("sr", sR);
-
-        let isChecker = checkerCheck(1, 1, "add");
-        if (isChecker) {
-          const dR = getMoveLocation("jumpMoveR").toString();
-          if (isLegal(dR) && isChecker !== playerTurn) {
-            possibilityTwo = checkerCheck(2, 2, "add") ? false : true;
-          }
-        } else {
-          possibilityTwo = true;
-        }
-      }
-
-      // let isChecker = checkerCheck(1, 1, "add");
-      // console.log("1", isChecker);
-      // if (isChecker) {
-      //   //this means the next piece is an enemy
-      //   if (column <= 5 && row > 1 && isChecker !== playerTurn) {
-      //     possibilityOne = checkerCheck(2, 2, "add") ? false : true;
-      //   } else {
-      //     //the diagonal checker is yours
-      //     possibilityOne = false;
-      //   }
-      // } else {
-      //   possibilityOne = true;
-      // }
-      // let isChecker = checkerCheck(1, 1, "sub");
-      // console.log("2", isChecker);
-      // if (isChecker) {
-      //   //this means the next piece is an enemy
-      //   // row > 1 only necessary for player1
-      //   if (column > 1 && row > 1 && isChecker !== playerTurn) {
-      //     possibilityTwo = checkerCheck(2, 2, "sub") ? false : true;
-      //   } else {
-      //     //the diagonal checker is yours
-      //     possibilityTwo = false;
-      //   }
-      // } else {
-      //   possibilityTwo = true;
-      // }
-      // console.log("pos1", possibilityOne, "pos2", possibilityTwo);
 
       // if both possible spots are occupied by the players checker, that checker cannot be selected
-      if (!possibilityOne && !possibilityTwo) return;
+      if (
+        !possibilityOne &&
+        !possibilityTwo &&
+        !possibilityThree &&
+        !possibilityFour
+      )
+        return;
       this.setState({
         board: update(this.state.board, {
           [row]: {
@@ -309,7 +377,8 @@ export default class App extends Component {
     this.setState({
       board,
       playerTurn: "playerOne",
-      winner: null
+      winner: null,
+      selectedPiece: ""
     });
   };
 
