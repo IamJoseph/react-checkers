@@ -110,10 +110,11 @@ export default class App extends Component {
           board[jumpedTile[0]][jumpedTile[1]].pieces === otherPlayer;
         if (isEnemy) {
           const isKing = (playerTurn === "playerOne" &&
-            +selectedPiece[0] === 6) ||
-            (playerTurn === "playerTwo" && +selectedPiece[0] === 1)
+            +selectedPiece[0] === 5) ||
+            (playerTurn === "playerTwo" && +selectedPiece[0] === 2)
             ? true
             : false;
+          console.log("we jumped", playerTurn, selectedPiece[0]);
 
           this.setState({
             board: update(this.state.board, {
@@ -207,7 +208,7 @@ export default class App extends Component {
         possibilityTwo = isChecker ? false : true;
         if (isChecker) {
           //this means the next piece is an enemy
-          if (column > 1 && isChecker !== playerTurn) {
+          if (column > 1 && row > 1 && isChecker !== playerTurn) {
             console.log("row", row, "column", column);
             possibilityTwo = checkerCheck(2, 2, "sub") ? false : true;
             console.log(" is next tile avail checkerCheck2", isChecker);
