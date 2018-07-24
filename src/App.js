@@ -29,7 +29,9 @@ export default class App extends Component {
       board,
       playerTurn: "playerOne",
       score: [0, 0],
-      winner: null
+      winner: null,
+      remainingP1: 12,
+      remainingP2: 12
     };
   }
 
@@ -51,19 +53,25 @@ export default class App extends Component {
   };
 
   updateBoard = (piece, position, isKing) => {
-    const { board, selectedPiece, playerTurn } = this.state;
+    const {
+      board,
+      selectedPiece,
+      playerTurn,
+      remainingP1,
+      remainingP2
+    } = this.state;
     const row = +position[0];
     const column = +position[1];
-    //    console.log("huh?", isKing);
     const isCheckerKing = selectedPiece
       ? board[selectedPiece[0]][selectedPiece[1]].isKing
       : isKing;
+
     function isLegal(xAxis, yAxis) {
-      let singleMove = newCheck(1, 1, xAxis, yAxis);
+      let singleMove = getTileInfo(1, 1, xAxis, yAxis);
       if (singleMove) {
         let isCheckerPiece = singleMove.pieces;
         if (isCheckerPiece) {
-          const doubleMove = newCheck(2, 2, xAxis, yAxis);
+          const doubleMove = getTileInfo(2, 2, xAxis, yAxis);
           if (doubleMove && isCheckerPiece !== playerTurn) {
             return doubleMove.pieces ? false : true;
           }
@@ -73,10 +81,9 @@ export default class App extends Component {
       }
     }
 
+    //TODO get rid of this in favor of getTileInfo
     function getMoveLocation(type) {
       const modNum = selectedPiece ? +selectedPiece : +position;
-      // console.log("king?", isKing);
-      //   console.log("asdlfkjasdfklj", isKing);
       const checkForKing = selectedPiece
         ? board[selectedPiece[0]][selectedPiece[1]].isKing
         : isKing;
@@ -129,36 +136,14 @@ export default class App extends Component {
       }
     }
     const otherPlayer = playerTurn === "playerOne" ? "playerTwo" : "playerOne";
-    // TODO replace with getMoveLocation function
-    function checkerCheck(rowNum, columnNum, binaryOp) {
-      const nextRow = playerTurn === "playerOne" ? row + rowNum : row - rowNum;
-      const nextColumn = binaryOp === "add"
-        ? column + columnNum
-        : column - columnNum;
-      return board[nextRow][nextColumn].pieces;
-    }
-    function newCheck(rowNum, columnNum, xAxis, yAxis) {
+    function getTileInfo(rowNum, columnNum, xAxis, yAxis) {
       if (!isCheckerKing) yAxis = playerTurn === "playerOne" ? "down" : "up";
       const rowToUse = selectedPiece ? +selectedPiece[0] : row;
       const columnToUse = selectedPiece ? +selectedPiece[1] : column;
-      // console.log(
-      //   "selectedPiece",
-      //   selectedPiece,
-      //   "xAxis",
-      //   xAxis,
-      //   "yAxis",
-      //   yAxis,
-      //   "row2use",
-      //   rowToUse,
-      //   "column",
-      //   columnToUse
-      // );
-
       const nextRow = yAxis === "down" ? rowToUse + rowNum : rowToUse - rowNum;
       const nextColumn = xAxis === "right"
         ? columnToUse + columnNum
         : columnToUse - columnNum;
-      // console.log("nextR", nextRow, "nextC", nextColumn);
 
       if (nextRow < 0 || nextRow > 7 || nextColumn < 0 || nextColumn > 7)
         return;
@@ -175,11 +160,6 @@ export default class App extends Component {
         return;
 
       //checks for jump moves
-      //const jumpedLeft = +position === getMoveLocation("jumpMoveL");
-
-      // if newcheck and newcheck.position
-      //const jumpedLeft =
-      //  console.log("jumpLeft", position, newCheck(2, 2, "left"));
       let jumpedLeft,
         jumpedRight,
         jumpedUL,
@@ -188,65 +168,48 @@ export default class App extends Component {
         jumpedDR,
         jumpedTile,
         isEnemy;
-      //  console.log("ischeckerking", isCheckerKing);
 
       if (isCheckerKing) {
         jumpedUL =
-          newCheck(2, 2, "left", "up") &&
-          position === newCheck(2, 2, "left", "up").position;
-        //  console.log("asdf", position, newCheck(2, 2, "left", "up"));
-
+          getTileInfo(2, 2, "left", "up") &&
+          position === getTileInfo(2, 2, "left", "up").position;
         jumpedUR =
-          newCheck(2, 2, "right", "up") &&
-          position === newCheck(2, 2, "right", "up").position;
+          getTileInfo(2, 2, "right", "up") &&
+          position === getTileInfo(2, 2, "right", "up").position;
         jumpedDL =
-          newCheck(2, 2, "left", "down") &&
-          position === newCheck(2, 2, "left", "down").position;
+          getTileInfo(2, 2, "left", "down") &&
+          position === getTileInfo(2, 2, "left", "down").position;
         jumpedDR =
-          newCheck(2, 2, "right", "down") &&
-          position === newCheck(2, 2, "right", "down").position;
+          getTileInfo(2, 2, "right", "down") &&
+          position === getTileInfo(2, 2, "right", "down").position;
         if (jumpedUL) {
-          jumpedTile = newCheck(1, 1, "left", "up");
+          jumpedTile = getTileInfo(1, 1, "left", "up");
           console.log("1");
         } else if (jumpedUR) {
-          jumpedTile = newCheck(1, 1, "right", "up");
+          jumpedTile = getTileInfo(1, 1, "right", "up");
           console.log("2");
         } else if (jumpedDL) {
-          jumpedTile = newCheck(1, 1, "left", "down");
+          jumpedTile = getTileInfo(1, 1, "left", "down");
           console.log("3");
         } else if (jumpedDR) {
-          jumpedTile = newCheck(1, 1, "right", "down");
+          jumpedTile = getTileInfo(1, 1, "right", "down");
           console.log("4");
         }
-        // isEnemy = jumpedTile.pieces === otherPlayer;
       } else {
         jumpedLeft =
-          newCheck(2, 2, "left") &&
-          position === newCheck(2, 2, "left").position;
+          getTileInfo(2, 2, "left") &&
+          position === getTileInfo(2, 2, "left").position;
 
         jumpedRight =
-          newCheck(2, 2, "right") &&
-          position === newCheck(2, 2, "right").position;
+          getTileInfo(2, 2, "right") &&
+          position === getTileInfo(2, 2, "right").position;
         console.log("jL", jumpedLeft, "jr", jumpedRight);
         if (jumpedLeft || jumpedRight) {
           jumpedTile = jumpedLeft
-            ? newCheck(1, 1, "left")
-            : newCheck(1, 1, "right");
+            ? getTileInfo(1, 1, "left")
+            : getTileInfo(1, 1, "right");
         }
       }
-      //  console.log("jumpedTile", jumpedTile);
-
-      //const jumpedRight = +position === getMoveLocation("jumpMoveR");
-      //   if (jumpedLeft || jumpedRight) {
-      // console.log("jumped");
-      // const jumpedTile = jumpedLeft
-      //   ? newCheck(1, 1, "left")
-      //   : newCheck(1, 1, "right");
-      // console.log("jumpedtile", jumpedTile, jumpedTile["position"][0]);
-
-      // const jumpedTile = jumpedLeft
-      //   ? getMoveLocation("singleMoveL").toString()
-      //   : getMoveLocation("singleMoveR").toString();
 
       isEnemy = jumpedTile && jumpedTile.pieces === otherPlayer;
       if (isEnemy) {
@@ -255,6 +218,13 @@ export default class App extends Component {
           (playerTurn === "playerTwo" && +selectedPiece[0] === 2)
           ? true
           : false;
+        const playerPieces = playerTurn === "playerOne"
+          ? "remainingP2"
+          : "remainingP1";
+        const piecesLeft = playerTurn === "playerOne"
+          ? remainingP1
+          : remainingP2;
+        console.log("objent", Object.entries(piecesLeft));
 
         this.setState({
           board: update(this.state.board, {
@@ -277,26 +247,19 @@ export default class App extends Component {
             }
           }),
           selectedPiece: "",
-          playerTurn: otherPlayer
+          playerTurn: otherPlayer,
+          [playerPieces]: this.state[playerPieces] - 1
         });
         return;
       }
 
       //checks for single moves
-      // console.log("isKing", isKing, selectedPiece[0], selectedPiece[1]);
 
       if (isCheckerKing) {
         const movedUpLeft = position === getMoveLocation("singleMoveUpL");
         const movedUpRight = position === getMoveLocation("singleMoveUpR");
         const movedDownLeft = position === getMoveLocation("singleMoveDownL");
         const movedDownRight = position === getMoveLocation("singleMoveDownR");
-        //console.log("movedL", movedLeft, "movedRight", movedRight);
-        console.log(
-          "is kinggg",
-          position,
-          movedDownRight,
-          getMoveLocation("singleMoveDownR")
-        );
 
         if (!movedUpLeft && !movedUpRight && !movedDownLeft && !movedDownRight)
           return;
@@ -310,7 +273,6 @@ export default class App extends Component {
         (playerTurn === "playerTwo" && +selectedPiece[0] === 1)
         ? true
         : false;
-      console.log("we got here");
 
       this.setState({
         board: update(this.state.board, {
@@ -340,11 +302,11 @@ export default class App extends Component {
       let possibilityFour = false;
 
       function isLegal(xAxis, yAxis) {
-        let singleMove = newCheck(1, 1, xAxis, yAxis);
+        let singleMove = getTileInfo(1, 1, xAxis, yAxis);
         if (singleMove) {
           let isCheckerPiece = singleMove.pieces;
           if (isCheckerPiece) {
-            const doubleMove = newCheck(2, 2, xAxis, yAxis);
+            const doubleMove = getTileInfo(2, 2, xAxis, yAxis);
             if (doubleMove && isCheckerPiece !== playerTurn) {
               return doubleMove.pieces ? false : true;
             }
@@ -384,15 +346,29 @@ export default class App extends Component {
     }
   };
 
-  // checkForWinner = () => {
-  // };
+  componentDidUpdate = () => {
+    this.checkForWinner();
+  };
+
+  checkForWinner = () => {
+    const { remainingP1: p1, remainingP2: p2, score } = this.state;
+    const winner = !p1 ? "Player 2" : !p2 ? "Player 1" : false;
+    const theScore = winner === "Player 1" ? 0 : 1;
+    if (winner && !this.state.winner)
+      this.setState({
+        winner,
+        score: update(score, { [theScore]: { $set: score[theScore] + 1 } })
+      });
+  };
 
   resetBoard = () => {
     this.setState({
       board,
       playerTurn: "playerOne",
       winner: null,
-      selectedPiece: ""
+      selectedPiece: "",
+      remainingP1: 12,
+      remainingP2: 12
     });
   };
 
