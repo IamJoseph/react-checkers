@@ -54,12 +54,29 @@ export default class App extends Component {
     const { board, selectedPiece, playerTurn } = this.state;
     const row = +position[0];
     const column = +position[1];
-    console.log("huh?", isKing);
+    //    console.log("huh?", isKing);
+    const isCheckerKing = selectedPiece
+      ? board[selectedPiece[0]][selectedPiece[1]].isKing
+      : isKing;
+    function isLegal(xAxis, yAxis) {
+      let singleMove = newCheck(1, 1, xAxis, yAxis);
+      if (singleMove) {
+        let isCheckerPiece = singleMove.pieces;
+        if (isCheckerPiece) {
+          const doubleMove = newCheck(2, 2, xAxis, yAxis);
+          if (doubleMove && isCheckerPiece !== playerTurn) {
+            return doubleMove.pieces ? false : true;
+          }
+        } else {
+          return true;
+        }
+      }
+    }
 
     function getMoveLocation(type) {
       const modNum = selectedPiece ? +selectedPiece : +position;
       // console.log("king?", isKing);
-      console.log("asdlfkjasdfklj", isKing);
+      //   console.log("asdlfkjasdfklj", isKing);
       const checkForKing = selectedPiece
         ? board[selectedPiece[0]][selectedPiece[1]].isKing
         : isKing;
@@ -118,19 +135,34 @@ export default class App extends Component {
       const nextColumn = binaryOp === "add"
         ? column + columnNum
         : column - columnNum;
+      return board[nextRow][nextColumn].pieces;
+    }
+    function newCheck(rowNum, columnNum, xAxis, yAxis) {
+      if (!isCheckerKing) yAxis = playerTurn === "playerOne" ? "down" : "up";
+      const rowToUse = selectedPiece ? +selectedPiece[0] : row;
+      const columnToUse = selectedPiece ? +selectedPiece[1] : column;
       // console.log(
-      //   "nextR",
-      //   nextRow,
+      //   "selectedPiece",
+      //   selectedPiece,
+      //   "xAxis",
+      //   xAxis,
+      //   "yAxis",
+      //   yAxis,
+      //   "row2use",
+      //   rowToUse,
       //   "column",
-      //   column,
-      //   "columnNum",
-      //   columnNum,
-      //   "nextColumn",
-      //   nextColumn
+      //   columnToUse
       // );
 
-      // needs to check if the next column/row is <0 or >7
-      return board[nextRow][nextColumn].pieces;
+      const nextRow = yAxis === "down" ? rowToUse + rowNum : rowToUse - rowNum;
+      const nextColumn = xAxis === "right"
+        ? columnToUse + columnNum
+        : columnToUse - columnNum;
+      // console.log("nextR", nextRow, "nextC", nextColumn);
+
+      if (nextRow < 0 || nextRow > 7 || nextColumn < 0 || nextColumn > 7)
+        return;
+      return board[nextRow][nextColumn];
     }
 
     // if there is a checker already selected
@@ -143,54 +175,117 @@ export default class App extends Component {
         return;
 
       //checks for jump moves
-      const jumpedLeft = +position === getMoveLocation("jumpMoveL");
-      const jumpedRight = +position === getMoveLocation("jumpMoveR");
-      if (jumpedLeft || jumpedRight) {
-        const jumpedTile = jumpedLeft
-          ? getMoveLocation("singleMoveL").toString()
-          : getMoveLocation("singleMoveR").toString();
+      //const jumpedLeft = +position === getMoveLocation("jumpMoveL");
 
-        const isEnemy =
-          board[jumpedTile[0]][jumpedTile[1]].pieces === otherPlayer;
-        if (isEnemy) {
-          const isKing = (playerTurn === "playerOne" &&
-            +selectedPiece[0] === 5) ||
-            (playerTurn === "playerTwo" && +selectedPiece[0] === 2)
-            ? true
-            : false;
+      // if newcheck and newcheck.position
+      //const jumpedLeft =
+      //  console.log("jumpLeft", position, newCheck(2, 2, "left"));
+      let jumpedLeft,
+        jumpedRight,
+        jumpedUL,
+        jumpedUR,
+        jumpedDL,
+        jumpedDR,
+        jumpedTile,
+        isEnemy;
+      //  console.log("ischeckerking", isCheckerKing);
 
-          this.setState({
-            board: update(this.state.board, {
-              [row]: {
-                [column]: {
-                  pieces: { $set: playerTurn },
-                  isKing: { $set: isKing }
-                }
-              },
-              [jumpedTile[0]]: {
-                [jumpedTile[1]]: {
-                  pieces: { $set: null }
-                }
-              },
-              [selectedPiece[0]]: {
-                [selectedPiece[1]]: {
-                  pieces: { $set: null },
-                  selected: { $set: false }
-                }
-              }
-            }),
-            selectedPiece: "",
-            playerTurn: otherPlayer
-          });
-          return;
+      if (isCheckerKing) {
+        jumpedUL =
+          newCheck(2, 2, "left", "up") &&
+          position === newCheck(2, 2, "left", "up").position;
+        //  console.log("asdf", position, newCheck(2, 2, "left", "up"));
+
+        jumpedUR =
+          newCheck(2, 2, "right", "up") &&
+          position === newCheck(2, 2, "right", "up").position;
+        jumpedDL =
+          newCheck(2, 2, "left", "down") &&
+          position === newCheck(2, 2, "left", "down").position;
+        jumpedDR =
+          newCheck(2, 2, "right", "down") &&
+          position === newCheck(2, 2, "right", "down").position;
+        if (jumpedUL) {
+          jumpedTile = newCheck(1, 1, "left", "up");
+          console.log("1");
+        } else if (jumpedUR) {
+          jumpedTile = newCheck(1, 1, "right", "up");
+          console.log("2");
+        } else if (jumpedDL) {
+          jumpedTile = newCheck(1, 1, "left", "down");
+          console.log("3");
+        } else if (jumpedDR) {
+          jumpedTile = newCheck(1, 1, "right", "down");
+          console.log("4");
         }
+        // isEnemy = jumpedTile.pieces === otherPlayer;
+      } else {
+        jumpedLeft =
+          newCheck(2, 2, "left") &&
+          position === newCheck(2, 2, "left").position;
+
+        jumpedRight =
+          newCheck(2, 2, "right") &&
+          position === newCheck(2, 2, "right").position;
+        console.log("jL", jumpedLeft, "jr", jumpedRight);
+        if (jumpedLeft || jumpedRight) {
+          jumpedTile = jumpedLeft
+            ? newCheck(1, 1, "left")
+            : newCheck(1, 1, "right");
+        }
+      }
+      //  console.log("jumpedTile", jumpedTile);
+
+      //const jumpedRight = +position === getMoveLocation("jumpMoveR");
+      //   if (jumpedLeft || jumpedRight) {
+      // console.log("jumped");
+      // const jumpedTile = jumpedLeft
+      //   ? newCheck(1, 1, "left")
+      //   : newCheck(1, 1, "right");
+      // console.log("jumpedtile", jumpedTile, jumpedTile["position"][0]);
+
+      // const jumpedTile = jumpedLeft
+      //   ? getMoveLocation("singleMoveL").toString()
+      //   : getMoveLocation("singleMoveR").toString();
+
+      isEnemy = jumpedTile && jumpedTile.pieces === otherPlayer;
+      if (isEnemy) {
+        const isKing = isCheckerKing ||
+          (playerTurn === "playerOne" && +selectedPiece[0] === 5) ||
+          (playerTurn === "playerTwo" && +selectedPiece[0] === 2)
+          ? true
+          : false;
+
+        this.setState({
+          board: update(this.state.board, {
+            [row]: {
+              [column]: {
+                pieces: { $set: playerTurn },
+                isKing: { $set: isKing }
+              }
+            },
+            [jumpedTile["position"][0]]: {
+              [jumpedTile["position"][1]]: {
+                pieces: { $set: null }
+              }
+            },
+            [selectedPiece[0]]: {
+              [selectedPiece[1]]: {
+                pieces: { $set: null },
+                selected: { $set: false }
+              }
+            }
+          }),
+          selectedPiece: "",
+          playerTurn: otherPlayer
+        });
         return;
       }
 
       //checks for single moves
-      console.log("isKing", isKing, selectedPiece[0], selectedPiece[1]);
+      // console.log("isKing", isKing, selectedPiece[0], selectedPiece[1]);
 
-      if (board[selectedPiece[0]][selectedPiece[1]].isKing) {
+      if (isCheckerKing) {
         const movedUpLeft = position === getMoveLocation("singleMoveUpL");
         const movedUpRight = position === getMoveLocation("singleMoveUpR");
         const movedDownLeft = position === getMoveLocation("singleMoveDownL");
@@ -243,110 +338,29 @@ export default class App extends Component {
       let possibilityTwo = false;
       let possibilityThree = false;
       let possibilityFour = false;
-      let sL = getMoveLocation("singleMoveL").toString();
-      let sR = getMoveLocation("singleMoveR").toString();
-      //   let onceMore = getMoveLocation("singleMoveL").toString();
-      function isLegal(pos) {
-        if (
-          //checking out of bounds and negative numbers
-          pos.length > 2 ||
-          pos < 0 ||
-          pos[0] < 0 ||
-          pos[0] > 7 ||
-          pos[1] < 0 ||
-          pos[1] > 7
-        )
-          return false;
-        return true;
+
+      function isLegal(xAxis, yAxis) {
+        let singleMove = newCheck(1, 1, xAxis, yAxis);
+        if (singleMove) {
+          let isCheckerPiece = singleMove.pieces;
+          if (isCheckerPiece) {
+            const doubleMove = newCheck(2, 2, xAxis, yAxis);
+            if (doubleMove && isCheckerPiece !== playerTurn) {
+              return doubleMove.pieces ? false : true;
+            }
+          } else {
+            return true;
+          }
+        }
       }
       if (isKing) {
-        let sUL = getMoveLocation("singleMoveUpL");
-        let sUR = getMoveLocation("singleMoveUpR");
-        let sDL = getMoveLocation("singleMoveDownL");
-        let sDR = getMoveLocation("singleMoveDownR");
-        if (isLegal(sUL)) {
-          console.log("sUL", sUL);
-          if (sUL.length === 1) sUL = "0" + sUL;
-          let isChecker = board[sUL[0]][sUL[1]].pieces;
-          if (isChecker) {
-            let dUL = getMoveLocation("jumpMoveUpL");
-            if (isLegal(dUL) && isChecker !== playerTurn) {
-              if (dUL.length === 1) dUL = "0" + dUL;
-              console.log("dUL", dUL);
-
-              possibilityOne = board[dUL[0]][dUL[1]].pieces ? false : true;
-            }
-          } else {
-            possibilityOne = true;
-          }
-        }
-        if (isLegal(sUR)) {
-          console.log("sUR", sUR);
-          if (sUR.length === 1) sUR = "0" + sUL;
-          let isChecker = board[sUR[0]][sUR[1]].pieces;
-          if (isChecker) {
-            let dUR = getMoveLocation("jumpMoveUpR");
-            if (isLegal(dUR) && isChecker !== playerTurn) {
-              if (dUR.length === 1) dUR = "0" + dUR; //can't do this
-              console.log("durrrrr", dUR);
-
-              possibilityTwo = board[dUR[0]][dUR[1]].pieces ? false : true;
-            }
-          } else {
-            possibilityTwo = true;
-          }
-        }
-        if (isLegal(sDL)) {
-          console.log("sDL", sDL);
-          let isChecker = board[sDL[0]][sDL[1]].pieces;
-          if (isChecker) {
-            const dDL = getMoveLocation("jumpMoveDownL");
-            if (isLegal(dDL) && isChecker !== playerTurn) {
-              possibilityThree = board[dDL[0]][dDL[1]].pieces ? false : true;
-            }
-          } else {
-            possibilityThree = true;
-          }
-        }
-        if (isLegal(sDR)) {
-          console.log("sDR", sDR);
-          let isChecker = board[sDR[0]][sDR[1]].pieces;
-          if (isChecker) {
-            const dDR = getMoveLocation("jumpMoveDownR").toString();
-            if (isLegal(dDR) && isChecker !== playerTurn) {
-              possibilityFour = board[dDR[0]][dDR[1]].pieces ? false : true;
-            }
-          } else {
-            possibilityFour = true;
-          }
-        }
+        possibilityOne = isLegal("left", "up");
+        possibilityTwo = isLegal("right", "up");
+        possibilityThree = isLegal("left", "down");
+        possibilityFour = isLegal("right", "down");
       } else {
-        if (isLegal(sL)) {
-          console.log("sL", sL);
-
-          let isChecker = checkerCheck(1, 1, "sub");
-          if (isChecker) {
-            const dL = getMoveLocation("jumpMoveL").toString();
-            if (isLegal(dL) && isChecker !== playerTurn) {
-              possibilityOne = checkerCheck(2, 2, "sub") ? false : true;
-            }
-          } else {
-            possibilityOne = true;
-          }
-        }
-        if (isLegal(sR)) {
-          console.log("sr", sR);
-
-          let isChecker = checkerCheck(1, 1, "add");
-          if (isChecker) {
-            const dR = getMoveLocation("jumpMoveR").toString();
-            if (isLegal(dR) && isChecker !== playerTurn) {
-              possibilityTwo = checkerCheck(2, 2, "add") ? false : true;
-            }
-          } else {
-            possibilityTwo = true;
-          }
-        }
+        possibilityOne = isLegal("left");
+        possibilityTwo = isLegal("right");
       }
 
       // if both possible spots are occupied by the players checker, that checker cannot be selected
