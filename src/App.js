@@ -36,14 +36,13 @@ export default class App extends Component {
   }
 
   setupBoard = () => {
-    // TODO - create uid other than index
     return this.state.board.map((curRow, rowIndex) => {
       return curRow.map((curTile, columnIndex) => {
         return (
           <Tiles
             row={rowIndex}
             column={columnIndex}
-            key={columnIndex}
+            key={curTile.position}
             values={curTile}
             onClick={this.updateBoard}
           />
@@ -52,12 +51,13 @@ export default class App extends Component {
     });
   };
 
-  moveSelectedPiece = (position, otherPlayer, isCheckerKing, getTileInfo) => {
-    // if there is a checker transverse the next selection then return (for now)
+  moveSelectedPiece = (position, isCheckerKing, getTileInfo) => {
     // TODO check for possible multiple jumps
     const { board, selectedPiece, playerTurn } = this.state;
+    const otherPlayer = playerTurn === "playerOne" ? "playerTwo" : "playerOne";
     const row = +position[0];
     const column = +position[1];
+    // return if there is a checker transverse to the next selection (for now)
     if (
       board[row][column].pieces === otherPlayer ||
       board[row][column].pieces === playerTurn
@@ -110,7 +110,7 @@ export default class App extends Component {
         : "remainingP1";
 
       this.setState({
-        board: update(this.state.board, {
+        board: update(board, {
           [row]: {
             [column]: {
               pieces: { $set: playerTurn },
@@ -242,7 +242,6 @@ export default class App extends Component {
       ? board[selectedPiece[0]][selectedPiece[1]].isKing
       : isKing;
 
-    const otherPlayer = playerTurn === "playerOne" ? "playerTwo" : "playerOne";
     function getTileInfo(rowNum, columnNum, xAxis, yAxis) {
       if (!isCheckerKing) yAxis = playerTurn === "playerOne" ? "down" : "up";
       const rowToUse = selectedPiece ? +selectedPiece[0] : row;
@@ -260,7 +259,7 @@ export default class App extends Component {
     // if there is a checker already selected
     if (selectedPiece) {
       // moves checker to new location if legal
-      this.moveSelectedPiece(position, otherPlayer, isCheckerKing, getTileInfo);
+      this.moveSelectedPiece(position, isCheckerKing, getTileInfo);
     } else if (piece === playerTurn) {
       // makes a selection if selected checker is owned by the player and checker has yet to be selected
       this.makeSelection(position, piece, isKing, getTileInfo);
