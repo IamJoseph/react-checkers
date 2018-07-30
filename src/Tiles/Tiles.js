@@ -2,23 +2,14 @@ import React from "react";
 import "./Tiles.css";
 
 export const Tiles = props => {
-  const {
-    location,
-    row,
-    column,
-    player,
-    values: { pieces, position, selected, isKing },
-    updateBoard
-  } = props;
+  const { values: { pieces, position, selected, isKing }, onClick } = props;
 
   return (
     <div
-      //className="tile"
       className={`tile ${selected ? "selected" : ""}`}
-      onClick={() => updateBoard(pieces, position, isKing)}
+      onClick={() => onClick(pieces, position, isKing)}
     >
       {pieces && <div className={`${pieces} ${isKing && "king"}`} />}
-      {/* <p>{value}</p> */}
     </div>
   );
 };
