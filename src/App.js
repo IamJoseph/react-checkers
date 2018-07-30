@@ -183,44 +183,78 @@ export default class App extends Component {
     const { selectedPiece, playerTurn } = this.state;
     const row = +position[0];
     const column = +position[1];
-    if (piece === playerTurn && !selectedPiece) {
-      let possibilityOne = false;
-      let possibilityTwo = false;
-      let possibilityThree = false;
-      let possibilityFour = false;
+    let possibilityOne = false;
+    let possibilityTwo = false;
+    let possibilityThree = false;
+    let possibilityFour = false;
 
-      function isLegal(xAxis, yAxis) {
-        let singleMove = getTileInfo(1, 1, xAxis, yAxis);
-        if (singleMove) {
-          let isCheckerPiece = singleMove.pieces;
-          if (isCheckerPiece) {
-            const doubleMove = getTileInfo(2, 2, xAxis, yAxis);
-            if (doubleMove && isCheckerPiece !== playerTurn) {
-              return doubleMove.pieces ? false : true;
-            }
-          } else {
-            return true;
+    function isLegal(xAxis, yAxis) {
+      let singleMove = getTileInfo(1, 1, xAxis, yAxis);
+      if (singleMove) {
+        let isCheckerPiece = singleMove.pieces;
+        if (isCheckerPiece) {
+          const doubleMove = getTileInfo(2, 2, xAxis, yAxis);
+          if (doubleMove && isCheckerPiece !== playerTurn) {
+            return doubleMove.pieces ? false : true;
           }
+        } else {
+          return true;
         }
       }
-      if (isKing) {
-        possibilityOne = isLegal("left", "up");
-        possibilityTwo = isLegal("right", "up");
-        possibilityThree = isLegal("left", "down");
-        possibilityFour = isLegal("right", "down");
-      } else {
-        possibilityOne = isLegal("left");
-        possibilityTwo = isLegal("right");
-      }
+    }
+    if (isKing) {
+      possibilityOne = isLegal("left", "up");
+      possibilityTwo = isLegal("right", "up");
+      possibilityThree = isLegal("left", "down");
+      possibilityFour = isLegal("right", "down");
+    } else {
+      possibilityOne = isLegal("left");
+      possibilityTwo = isLegal("right");
+    }
 
-      // if both possible spots are occupied by the players checker, that checker cannot be selected
-      if (
-        !possibilityOne &&
-        !possibilityTwo &&
-        !possibilityThree &&
-        !possibilityFour
-      )
-        return;
+    // if both possible spots are occupied by the players checker, that checker cannot be selected
+    if (
+      !possibilityOne &&
+      !possibilityTwo &&
+      !possibilityThree &&
+      !possibilityFour
+    )
+      return;
+    if (selectedPiece) {
+      if (+selectedPiece[0] === row) {
+        this.setState({
+          board: update(this.state.board, {
+            [row]: {
+              [column]: {
+                selected: { $set: true }
+              },
+              [selectedPiece[1]]: {
+                selected: { $set: false }
+              }
+            }
+          }),
+
+          selectedPiece: position
+        });
+      } else {
+        this.setState({
+          board: update(this.state.board, {
+            [row]: {
+              [column]: {
+                selected: { $set: true }
+              }
+            },
+            [selectedPiece[0]]: {
+              [selectedPiece[1]]: {
+                selected: { $set: false }
+              }
+            }
+          }),
+
+          selectedPiece: position
+        });
+      }
+    } else {
       this.setState({
         board: update(this.state.board, {
           [row]: {
@@ -241,11 +275,19 @@ export default class App extends Component {
     const isCheckerKing = selectedPiece
       ? board[selectedPiece[0]][selectedPiece[1]].isKing
       : isKing;
-
+    const isSamePlayer = () => {
+      return board[row][column].pieces === playerTurn;
+    };
+    // if there is no saved selection use current selection
+    // if there is a saved selection and current selection is a
     function getTileInfo(rowNum, columnNum, xAxis, yAxis) {
       if (!isCheckerKing) yAxis = playerTurn === "playerOne" ? "down" : "up";
-      const rowToUse = selectedPiece ? +selectedPiece[0] : row;
-      const columnToUse = selectedPiece ? +selectedPiece[1] : column;
+      const rowToUse = selectedPiece
+        ? isSamePlayer() ? row : +selectedPiece[0]
+        : row;
+      const columnToUse = selectedPiece
+        ? isSamePlayer() ? column : +selectedPiece[1]
+        : column;
       const nextRow = yAxis === "down" ? rowToUse + rowNum : rowToUse - rowNum;
       const nextColumn = xAxis === "right"
         ? columnToUse + columnNum
@@ -258,6 +300,10 @@ export default class App extends Component {
 
     // if there is a checker already selected
     if (selectedPiece) {
+      if (piece === playerTurn) {
+        this.makeSelection(position, piece, isKing, getTileInfo);
+      }
+
       // moves checker to new location if legal
       this.moveSelectedPiece(position, isCheckerKing, getTileInfo);
     } else if (piece === playerTurn) {
